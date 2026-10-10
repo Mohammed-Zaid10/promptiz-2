@@ -1,0 +1,198 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-signature: 'Alex Brush', cursive;
+    --font-handwriting: 'Caveat', cursive;
+    --font-script: 'Dancing Script', cursive;
+    --font-editorial: 'Cormorant Garamond', Georgia, serif;
+    --font-montecarlo: 'MonteCarlo', cursive;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+.font-signature {
+  font-family: var(--font-signature);
+}
+
+.font-handwriting {
+  font-family: var(--font-handwriting);
+}
+
+.font-script {
+  font-family: var(--font-script);
+}
+
+.font-editorial {
+  font-family: var(--font-editorial);
+}
+
+.font-montecarlo {
+  font-family: var(--font-montecarlo);
+}
+
+/* Animations for type box and logo */
+@keyframes typebox-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.03), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+}
+
+@keyframes logo-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logo-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes logo-breath {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes roam-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash-roam {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -1200;
+  }
+}
+
+@keyframes dash-roam-reverse {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 1200;
+  }
+}
+
+.animate-roam-spin {
+  animation: roam-spin 7s linear infinite;
+}
+
+.animate-roam-spin-fast {
+  animation: roam-spin 3.5s linear infinite;
+}
+
+.animate-dash-roam {
+  animation: dash-roam 8s linear infinite;
+}
+
+.animate-dash-roam-fast {
+  animation: dash-roam 4s linear infinite;
+}
+
+.animate-dash-roam-reverse {
+  animation: dash-roam-reverse 10s linear infinite;
+}
+
+.bg-roam-conic {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 310deg,
+    currentColor 350deg,
+    transparent 360deg
+  );
+}
+
+.animate-typebox-focus {
+  animation: typebox-pulse 3s ease-in-out infinite;
+}
+
+.animate-logo-spin {
+  animation: logo-spin-slow 22s linear infinite;
+}
+
+.animate-logo-spin-fast {
+  animation: logo-spin-slow 12s linear infinite;
+}
+
+.animate-logo-reverse {
+  animation: logo-spin-reverse 18s linear infinite;
+}
+
+.animate-logo-breath {
+  animation: logo-breath 4s ease-in-out infinite;
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-sweep 6s infinite linear;
+}
+
+/* Custom scrollbars in monochrome */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 128, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 128, 0.5);
+}
