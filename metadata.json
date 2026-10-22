@@ -1,0 +1,6 @@
+{
+  "name": "PROMPTIZ",
+  "description": "Architectural prompt engineering platform creating senior-grade AI directives, role specifications, and structured prompts across vision, code, copy, and reasoning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
