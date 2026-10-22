@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PromptizLogo } from './components/PromptizLogo';
 import {
-  Wand2,
-  Copy,
   Check,
-  ArrowRight,
-  AlertCircle,
   Palette,
   ChevronDown,
   Sun,
@@ -229,17 +225,9 @@ const DARK_THEMES: ThemeId[] = ['obsidian', 'graphite', 'titanium', 'midnight', 
 const ALL_THEMES: ThemeId[] = [...LIGHT_THEMES, ...DARK_THEMES];
 
 export default function App() {
-  const [userInput, setUserInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
-  const [roleTitle, setRoleTitle] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-
   const [logoFontStyle, setLogoFontStyle] = useState<'signature' | 'handwriting' | 'script' | 'editorial'>(
     'editorial'
   );
-  const [isTyping, setIsTyping] = useState(false);
 
   // Theme State (Default: Warm Alabaster)
   const [currentThemeId, setCurrentThemeId] = useState<ThemeId>(() => {
@@ -274,6 +262,32 @@ export default function App() {
     localStorage.setItem('promptiz_theme', currentThemeId);
   }, [currentThemeId]);
 
+  // Ensure Botpress chatbot mounts directly inside the middle card container
+  useEffect(() => {
+    const attachBotpress = () => {
+      const bp = (window as any).botpress;
+      if (bp && typeof bp.config === 'function') {
+        try {
+          bp.config({
+            configuration: {
+              embeddedChatId: 'promptiz-embedded-botpress',
+            },
+          });
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    attachBotpress();
+    const interval = setInterval(attachBotpress, 800);
+    const timeout = setTimeout(() => clearInterval(interval), 8000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -284,55 +298,6 @@ export default function App() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleGenerate = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!userInput.trim()) {
-      setErrorMessage('Please type what you want in the text box.');
-      return;
-    }
-
-    setErrorMessage(null);
-    setIsLoading(true);
-
-    try {
-      const res = await fetch('/api/generate-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawIdea: userInput.trim(),
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${res.status}`);
-      }
-
-      const data = await res.json();
-      setGeneratedPrompt(data.fullPrompt || '');
-      setRoleTitle(data.rolePersona || 'Senior Prompt Architect');
-    } catch (err: any) {
-      console.error('Generation error:', err);
-      setErrorMessage(err?.message || 'Failed to generate prompt. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCopy = () => {
-    if (!generatedPrompt) return;
-    navigator.clipboard.writeText(generatedPrompt);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleClear = () => {
-    setUserInput('');
-    setGeneratedPrompt(null);
-    setRoleTitle(null);
-    setErrorMessage(null);
-  };
 
   const cycleNextTheme = () => {
     const currentIndex = ALL_THEMES.indexOf(currentThemeId);
@@ -512,27 +477,19 @@ export default function App() {
           </div>
 
           <p className={`text-xs sm:text-sm ${theme.textMuted} max-w-lg mx-auto font-normal pt-1`}>
-            Type any request. AI will automatically construct a senior-grade prompt with authoritative role, specifications, qualities, and disclaimers.
+            Chat directly with Promptiz AI to turn your ideas into clear, professional, task-specific prompts.
           </p>
         </div>
 
-        {/* Animated Text Area Card with Roaming Lines */}
+        {/* Animated Card with Embedded Botpress Chatbot & Roaming Lines */}
         <div className="relative group">
           {/* 1. Rotating Conic Border Beam (Roaming Lines effect 1) */}
           <div className="absolute -inset-[1.5px] rounded-2xl overflow-hidden pointer-events-none z-0">
-            <div
-              className={`absolute -inset-[100%] w-[300%] h-[300%] m-auto bg-roam-conic opacity-60 ${
-                isTyping ? 'animate-roam-spin-fast opacity-90' : 'animate-roam-spin'
-              }`}
-            />
+            <div className="absolute -inset-[100%] w-[300%] h-[300%] m-auto bg-roam-conic opacity-60 animate-roam-spin" />
           </div>
 
           {/* 2. Animated Ambient Outer Halo Glow */}
-          <div
-            className={`absolute -inset-1 rounded-3xl bg-gradient-to-r from-current/5 via-current/15 to-current/5 blur-md transition-opacity duration-500 pointer-events-none ${
-              isTyping ? 'opacity-100 animate-typebox-focus' : 'opacity-60 group-hover:opacity-90'
-            }`}
-          />
+          <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-current/5 via-current/15 to-current/5 blur-md opacity-70 pointer-events-none" />
 
           {/* 3. High-Precision SVG Perimeter Laser Tracers (Roaming Lines effect 2) */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-2xl overflow-visible z-20">
@@ -547,9 +504,7 @@ export default function App() {
               stroke="currentColor"
               strokeWidth="3.5"
               strokeDasharray="140 500"
-              className={`opacity-40 blur-[2px] ${
-                isTyping ? 'animate-dash-roam-fast opacity-75' : 'animate-dash-roam'
-              }`}
+              className="opacity-40 blur-[2px] animate-dash-roam"
             />
             {/* Sharp traveling laser beam */}
             <rect
@@ -562,9 +517,7 @@ export default function App() {
               stroke="currentColor"
               strokeWidth="2"
               strokeDasharray="120 520"
-              className={`opacity-85 ${
-                isTyping ? 'animate-dash-roam-fast opacity-100' : 'animate-dash-roam'
-              }`}
+              className="opacity-85 animate-dash-roam"
             />
             {/* Counter-roaming secondary laser tracer */}
             <rect
@@ -581,160 +534,42 @@ export default function App() {
             />
           </svg>
 
-          {/* Inner Card Container */}
+          {/* Inner Card Container housing the Botpress Chatbot */}
           <div
-            className={`relative p-5 sm:p-7 rounded-2xl border ${theme.border} ${theme.card} shadow-2xl transition-all duration-300 z-10`}
+            className={`relative rounded-2xl border ${theme.border} ${theme.card} shadow-2xl transition-all duration-300 z-10 overflow-hidden flex flex-col`}
           >
-            <form onSubmit={handleGenerate} className="space-y-4">
-              <div className="relative">
-                {/* Inner roaming outline around text area */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible z-10">
-                  <rect
-                    x="0"
-                    y="0"
-                    width="100%"
-                    height="100%"
-                    rx="12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeDasharray="80 360"
-                    className={`transition-opacity ${
-                      isTyping
-                        ? 'opacity-70 animate-dash-roam-fast'
-                        : 'opacity-30 animate-dash-roam'
-                    }`}
-                  />
-                </svg>
-
-                {/* Live Activity Beacon inside text box */}
-                <div className="absolute top-3.5 right-3.5 z-20 flex items-center gap-1.5 pointer-events-none select-none">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      isTyping ? 'bg-emerald-500 animate-ping' : 'bg-current opacity-40'
-                    }`}
-                  />
-                  <span className="text-[10px] font-mono tracking-wider opacity-50 uppercase">
-                    {isTyping ? 'Typing...' : 'AI Ready'}
-                  </span>
-                </div>
-
-                <textarea
-                  value={userInput}
-                  onChange={(e) => {
-                    setUserInput(e.target.value);
-                    setIsTyping(true);
-                  }}
-                  onBlur={() => setIsTyping(false)}
-                  placeholder="Type what you want to create (e.g. I want an image of a majestic lion in a snowstorm, or I want python code to scrape prices, or a high-converting sales email...)"
-                  rows={6}
-                  className={`w-full ${theme.inputBg} border ${theme.border} rounded-xl px-4 py-3.5 pr-24 text-sm sm:text-base ${theme.text} placeholder:${theme.textMuted} focus:outline-none focus:ring-1 focus:ring-current transition-all font-sans leading-relaxed resize-y`}
-                />
-              </div>
-
-              {errorMessage && (
-                <div className="p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              {/* Action Bar */}
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={cycleNextTheme}
-                  className={`text-[11px] font-mono ${theme.textMuted} hover:underline flex items-center gap-1.5`}
-                  title="Quick cycle next theme"
-                >
-                  <Palette className="w-3 h-3" />
-                  <span>Switch Theme ({theme.name})</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {userInput && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleClear();
-                        setIsTyping(false);
-                      }}
-                      className={`px-3 py-2 rounded-lg border ${theme.secondaryBtn} text-xs transition-colors`}
-                    >
-                      Clear
-                    </button>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={isLoading || !userInput.trim()}
-                    className={`px-6 py-2.5 rounded-xl ${theme.primaryBtn} font-semibold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95`}
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        <span>Creating Prompt...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4" />
-                        <span>Create Prompt</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Generated Output */}
-        {generatedPrompt && (
-          <div
-            className={`mt-8 p-5 sm:p-7 rounded-2xl border ${theme.border} ${theme.card} shadow-xl space-y-4 animate-in fade-in duration-200 transition-colors duration-300`}
-          >
-            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${theme.border} pb-4`}>
-              <div>
-                <span className={`text-[11px] font-mono uppercase tracking-widest ${theme.textMuted} block`}>
-                  PROMPTIZ SENIOR PROMPT
+            {/* Top Bar inside Card */}
+            <div className={`flex items-center justify-between px-4 sm:px-6 py-3 border-b ${theme.border} bg-current/5 select-none`}>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-mono font-medium tracking-wide uppercase">
+                  Promptiz AI Chatbot
                 </span>
-                {roleTitle && (
-                  <span className="text-xs font-mono font-medium">
-                    Role Assigned: {roleTitle}
-                  </span>
-                )}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-current/20 opacity-60 hidden sm:inline-block">
+                  Embedded Live
+                </span>
               </div>
 
               <button
                 type="button"
-                onClick={handleCopy}
-                className={`px-4 py-2 rounded-lg ${theme.primaryBtn} font-semibold text-xs tracking-wider uppercase transition-all flex items-center gap-1.5 self-start sm:self-auto`}
+                onClick={cycleNextTheme}
+                className={`text-[11px] font-mono ${theme.textMuted} hover:underline flex items-center gap-1.5`}
+                title="Quick cycle next theme"
               >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Prompt</span>
-                  </>
-                )}
+                <Palette className="w-3.5 h-3.5" />
+                <span>Theme ({theme.name})</span>
               </button>
             </div>
 
-            {/* Formatted Code Block */}
-            <div className="relative group">
-              <pre
-                className={`w-full p-4 sm:p-5 rounded-xl border ${theme.codeBg} font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto whitespace-pre-wrap select-text`}
-              >
-                {generatedPrompt}
-              </pre>
+            {/* Embedded Chat Container */}
+            <div className="relative w-full h-[620px] min-h-[580px] bg-transparent">
+              <div
+                id="promptiz-embedded-botpress"
+                className="w-full h-full"
+              />
             </div>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Footer */}

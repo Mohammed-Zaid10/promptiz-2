@@ -196,3 +196,32 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 120, 128, 0.5);
 }
+
+/* Hide Botpress floating button widget completely */
+#fab-root,
+.bp-fab-btn,
+.bp-widget-widget,
+[id*="fab-root"],
+[aria-label*="Open Chat" i],
+[aria-label*="chat" i] {
+  display: none !important;
+}
+
+/* Embedded Botpress Container Styling */
+#promptiz-embedded-botpress {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  min-height: 560px;
+  background: transparent;
+}
+
+#promptiz-embedded-botpress iframe,
+#promptiz-embedded-botpress .bpEmbeddedWebchat,
+#promptiz-embedded-botpress [id*="webchat"] {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  border-radius: 0.875rem !important;
+}
+

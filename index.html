@@ -19,6 +19,26 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script src="https://cdn.botpress.cloud/webchat/v5.0/inject.js"></script>
+    <script>
+      (function() {
+        var orig = window.botpress;
+        if (orig) {
+          window.botpress = new Proxy({}, {
+            get: function(target, prop) {
+              if (prop === 'init') {
+                return function(options) {
+                  if (options && options.configuration) {
+                    options.configuration.embeddedChatId = 'promptiz-embedded-botpress';
+                  }
+                  return orig.init(options);
+                };
+              }
+              return orig[prop];
+            }
+          });
+        }
+      })();
+    </script>
     <script src="https://files.bpcontent.cloud/2026/10/22/08/20261022085305-ZM23P3P4.js" defer></script>
   </body>
 </html>
