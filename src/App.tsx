@@ -7,6 +7,8 @@ import {
   Sun,
   Moon,
   RotateCcw,
+  Copy,
+  AlertTriangle,
 } from 'lucide-react';
 
 export type ThemeId =
@@ -297,6 +299,77 @@ export default function App() {
     }
     setIsResetting(true);
     setTimeout(() => setIsResetting(false), 1200);
+  };
+
+  const [latestPrompt, setLatestPrompt] = useState<string>('');
+  const [copied, setCopied] = useState<boolean>(false);
+
+  // Listen for bot responses from Botpress
+  useEffect(() => {
+    const attachMessageListener = () => {
+      const bp = (window as any).botpress;
+      if (bp && typeof bp.on === 'function') {
+        try {
+          bp.on('message', (msg: any) => {
+            const text =
+              msg?.payload?.text ||
+              msg?.text ||
+              msg?.payload?.value ||
+              msg?.value ||
+              '';
+            if (text && typeof text === 'string' && text.trim().length > 0) {
+              setLatestPrompt(text.trim());
+            }
+          });
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    const handleWindowMessage = (e: MessageEvent) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data) {
+          const text =
+            data.payload?.text ||
+            data.text ||
+            data.message?.text ||
+            data.payload?.value ||
+            '';
+          if (text && typeof text === 'string' && text.trim().length > 0) {
+            setLatestPrompt(text.trim());
+          }
+        }
+      } catch {
+        // ignore non-json
+      }
+    };
+
+    window.addEventListener('message', handleWindowMessage);
+    attachMessageListener();
+    const interval = setInterval(attachMessageListener, 1500);
+
+    return () => {
+      window.removeEventListener('message', handleWindowMessage);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleCopyPrompt = () => {
+    const selected = window.getSelection()?.toString()?.trim();
+    const textToCopy = selected || latestPrompt;
+
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy);
+    } else {
+      navigator.clipboard.writeText(
+        'Promptiz AI Prompt: Please make sure to save your directives before the session resets.'
+      );
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
   };
 
   // Ensure Botpress chatbot mounts directly inside the middle card container
@@ -643,11 +716,42 @@ export default function App() {
             </div>
 
             {/* Embedded Chat Container - Smooth Single Scroll Without Sticking */}
-            <div className="relative w-full h-[620px] min-h-[560px] bg-transparent overflow-hidden overscroll-contain">
+            <div className="relative w-full h-[580px] min-h-[520px] bg-transparent overflow-hidden overscroll-contain">
               <div
                 id="promptiz-embedded-botpress"
                 className="w-full h-full overflow-hidden overscroll-contain"
               />
+            </div>
+
+            {/* Prompt Warning & 1-Click Copy Action Bar */}
+            <div className={`p-4 sm:px-6 sm:py-3.5 border-t border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors duration-300 select-none`}>
+              <div className="flex items-start sm:items-center gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5 sm:mt-0 animate-pulse" />
+                <p className="text-xs text-amber-900 dark:text-amber-200 font-sans leading-relaxed">
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">Notice:</span> Your prompt data will be gone in a few minutes (10m inactivity reset). Please copy or save your prompt!
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCopyPrompt}
+                  className={`px-4 py-2 rounded-xl ${theme.primaryBtn} font-semibold text-xs tracking-wide uppercase transition-all flex items-center gap-2 shadow-md active:scale-95`}
+                  title="Copy generated prompt to clipboard"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Prompt</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
