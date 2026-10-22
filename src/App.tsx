@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  RotateCcw,
 } from 'lucide-react';
 
 export type ThemeId =
@@ -262,6 +263,42 @@ export default function App() {
     localStorage.setItem('promptiz_theme', currentThemeId);
   }, [currentThemeId]);
 
+  const [isResetting, setIsResetting] = useState(false);
+
+  const clearBotpressStorage = () => {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('bp') || key.includes('botpress') || key.includes('webchat'))) {
+          localStorage.removeItem(key);
+        }
+      }
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i);
+        if (key && (key.startsWith('bp') || key.includes('botpress') || key.includes('webchat'))) {
+          sessionStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleResetHistory = () => {
+    clearBotpressStorage();
+    localStorage.setItem('promptiz_last_active_time', Date.now().toString());
+    const bp = (window as any).botpress;
+    if (bp && typeof bp.restartConversation === 'function') {
+      try {
+        bp.restartConversation();
+      } catch {
+        // ignore
+      }
+    }
+    setIsResetting(true);
+    setTimeout(() => setIsResetting(false), 1200);
+  };
+
   // Ensure Botpress chatbot mounts directly inside the middle card container
   useEffect(() => {
     const attachBotpress = () => {
@@ -271,6 +308,7 @@ export default function App() {
           bp.config({
             configuration: {
               embeddedChatId: 'promptiz-embedded-botpress',
+              conversationHistory: false,
             },
           });
         } catch {
@@ -285,6 +323,36 @@ export default function App() {
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
+    };
+  }, []);
+
+  // 10-Minute Inactivity Auto-Reset: resets history if inactive for 10 minutes
+  useEffect(() => {
+    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
+
+    const checkInactivity = () => {
+      const lastActive = localStorage.getItem('promptiz_last_active_time');
+      const now = Date.now();
+      if (!lastActive || now - Number(lastActive) >= INACTIVITY_LIMIT_MS) {
+        handleResetHistory();
+      }
+    };
+
+    const recordActivity = () => {
+      localStorage.setItem('promptiz_last_active_time', Date.now().toString());
+    };
+
+    window.addEventListener('pointerdown', recordActivity);
+    window.addEventListener('keydown', recordActivity);
+    window.addEventListener('focus', checkInactivity);
+
+    const interval = setInterval(checkInactivity, 20000); // Check every 20s
+
+    return () => {
+      window.removeEventListener('pointerdown', recordActivity);
+      window.removeEventListener('keydown', recordActivity);
+      window.removeEventListener('focus', checkInactivity);
+      clearInterval(interval);
     };
   }, []);
 
@@ -545,20 +613,33 @@ export default function App() {
                 <span className="text-xs font-mono font-medium tracking-wide uppercase">
                   Promptiz AI Chatbot
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-current/20 opacity-60 hidden sm:inline-block">
-                  Embedded Live
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-current/20 opacity-60 hidden sm:inline-block" title="Chat conversation is not saved permanently and resets after 10 minutes of inactivity">
+                  Auto-resets in 10m
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={cycleNextTheme}
-                className={`text-[11px] font-mono ${theme.textMuted} hover:underline flex items-center gap-1.5`}
-                title="Quick cycle next theme"
-              >
-                <Palette className="w-3.5 h-3.5" />
-                <span>Theme ({theme.name})</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetHistory}
+                  disabled={isResetting}
+                  className={`text-[11px] font-mono ${theme.textMuted} hover:opacity-100 flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-current/15 hover:bg-current/5 transition-all`}
+                  title="Reset conversation and start clean session"
+                >
+                  <RotateCcw className={`w-3 h-3 ${isResetting ? 'animate-spin text-emerald-500' : ''}`} />
+                  <span>{isResetting ? 'Resetting...' : 'New Chat'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={cycleNextTheme}
+                  className={`text-[11px] font-mono ${theme.textMuted} hover:underline flex items-center gap-1.5`}
+                  title="Quick cycle next theme"
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                  <span>Theme ({theme.name})</span>
+                </button>
+              </div>
             </div>
 
             {/* Embedded Chat Container */}

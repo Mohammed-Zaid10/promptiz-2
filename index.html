@@ -21,6 +21,28 @@
     <script src="https://cdn.botpress.cloud/webchat/v5.0/inject.js"></script>
     <script>
       (function() {
+        // Auto-reset chatbot history after 10 minutes of inactivity
+        var INACTIVITY_LIMIT_MS = 10 * 60 * 1000;
+        var lastActive = localStorage.getItem('promptiz_last_active_time');
+        var now = Date.now();
+        if (!lastActive || (now - Number(lastActive) > INACTIVITY_LIMIT_MS)) {
+          try {
+            for (var i = localStorage.length - 1; i >= 0; i--) {
+              var k = localStorage.key(i);
+              if (k && (k.indexOf('bp') === 0 || k.indexOf('botpress') !== -1 || k.indexOf('webchat') !== -1)) {
+                localStorage.removeItem(k);
+              }
+            }
+            for (var j = sessionStorage.length - 1; j >= 0; j--) {
+              var sk = sessionStorage.key(j);
+              if (sk && (sk.indexOf('bp') === 0 || sk.indexOf('botpress') !== -1 || sk.indexOf('webchat') !== -1)) {
+                sessionStorage.removeItem(sk);
+              }
+            }
+          } catch (e) {}
+        }
+        localStorage.setItem('promptiz_last_active_time', now.toString());
+
         var orig = window.botpress;
         if (orig) {
           window.botpress = new Proxy({}, {
@@ -29,6 +51,7 @@
                 return function(options) {
                   if (options && options.configuration) {
                     options.configuration.embeddedChatId = 'promptiz-embedded-botpress';
+                    options.configuration.conversationHistory = false;
                   }
                   return orig.init(options);
                 };
