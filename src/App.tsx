@@ -642,11 +642,11 @@ export default function App() {
               </div>
             </div>
 
-            {/* Embedded Chat Container */}
-            <div className="relative w-full h-[620px] min-h-[580px] bg-transparent">
+            {/* Embedded Chat Container - Smooth Single Scroll Without Sticking */}
+            <div className="relative w-full h-[620px] min-h-[560px] bg-transparent overflow-hidden overscroll-contain">
               <div
                 id="promptiz-embedded-botpress"
-                className="w-full h-full"
+                className="w-full h-full overflow-hidden overscroll-contain"
               />
             </div>
           </div>

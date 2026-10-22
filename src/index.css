@@ -178,6 +178,15 @@
   animation: shimmer-sweep 6s infinite linear;
 }
 
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 /* Custom scrollbars in monochrome */
 ::-webkit-scrollbar {
   width: 6px;
@@ -207,13 +216,15 @@
   display: none !important;
 }
 
-/* Embedded Botpress Container Styling */
+/* Embedded Botpress Container Styling: Single Smooth Scroll without Sticking */
 #promptiz-embedded-botpress {
   position: relative;
-  width: 100%;
-  height: 600px;
-  min-height: 560px;
+  width: 100% !important;
+  height: 100% !important;
   background: transparent;
+  overflow: hidden !important; /* Eliminates outer container duplicate scrollbar */
+  overscroll-behavior: contain !important; /* Prevents scroll chaining trap */
+  -webkit-overflow-scrolling: touch;
 }
 
 #promptiz-embedded-botpress iframe,
@@ -222,6 +233,9 @@
   width: 100% !important;
   height: 100% !important;
   border: none !important;
-  border-radius: 0.875rem !important;
+  border-radius: 0 0 1rem 1rem !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
 }
+
 
